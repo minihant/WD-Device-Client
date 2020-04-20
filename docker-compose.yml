@@ -1,0 +1,11 @@
+version: "2"
+services:
+  docker-display:
+    image: display
+    build: .
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:8081
+    volumes:
+      - .:/usr/src/appdocker

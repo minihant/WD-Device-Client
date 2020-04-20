@@ -1,0 +1,14 @@
+{
+    "username": "hant",
+    "password": "hant8425",
+    "comport": "COM5",
+    "baudrate": 115200,
+    "datalen": 8,
+    "parity": "none",
+    "Browser_port": 8081,
+    "IF_port":8082,
+    "browser": "ENABLE",
+    "DOWNLOAD_FONT": "DISABLE",
+    "SERVER_URL": "localhost",
+    "DEVICE_ID": "WD5000-0001"
+}
