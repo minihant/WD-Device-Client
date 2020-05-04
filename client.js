@@ -2,11 +2,11 @@
 var USB_CDC= require('./js-lib/Usb_CDC.js');
 var WP = require('./js-lib/WP_Global.js');
 var open = require('open');
+const jwt = require('jsonwebtoken');
 var CONFIG = WP.CONFIG;
 const dotenv = require('dotenv');
 dotenv.config();
-// var BROWSER_URL = 'http://'+CONFIG.SERVER_URL +':' + CONFIG.Browser_port;
-// var IF_URL = 'http://'+CONFIG.SERVER_URL +':' + CONFIG.IF_port;
+ 
 //----------------------------------------
 async function ScanTimeout() {
     if (WP.ComPortPresent == null) {
@@ -66,30 +66,30 @@ process.on('SIGKILL',async () => {
     console.log("SIGKILL exit Server");
     process.exit();
 })
-
-
-//-------------------------------------------------------------
-// var socket = require('socket.io-client')('http://localhost:8081');
-// var socket = require('socket.io-client')(IF_URL);
-
-
+ 
 //-----------------------------------------
 //
 //-----------------------------------------
 WP.socket.on('connect', async function(){
-    console.log('on connect ... [%s]', WP.getSocketID());
-    WP.SocketSent('NewClient', {id: CONFIG.DEVICE_ID });
-    if(CONFIG.browser === "ENABLE"){
-        // open('http://localhost:' + CONFIG.http_port);
-        await open(WP.BROWSER_URL)
-        
-        //--- scan comport ----------------------------
-        await USB_CDC._ScanPort();
-        clearImmediate(WP.scanalarm);
-        WP.scanalarm = setTimeout(function() { ScanTimeout(); }, 1000);
-        await WP._delay(500);
-        //-----------------------------------------------
-        if (WP.ComPortPresent != null) {
+    console.log('Display Client(V:%s) connect to (%s)', WP.getAppVersion(),CONFIG.SERVER_URL);
+    const privatekey = process.env.TOKEN_SECRET;
+    const usr_id =  CONFIG.username;
+    const pwd_id = CONFIG.password;
+    const usr_token = jwt.sign(usr_id,privatekey)
+    const pwd_token = jwt.sign(pwd_id,privatekey)
+    console.log("NewClient: user(%s) ",usr_id);
+    console.log("userToken: %s",usr_token);
+    console.log("pwdToken: %s ",pwd_token);
+    WP.SocketSent('NewClient', {id: CONFIG.DEVICE_ID ,usr:usr_token,pwd:pwd_token});
+    await open(WP.BROWSER_URL)
+    
+    //--- scan comport ----------------------------
+    await USB_CDC._ScanPort();
+    clearImmediate(WP.scanalarm);
+    WP.scanalarm = setTimeout(function() { ScanTimeout(); }, 1000);
+    await WP._delay(500);
+    //---Send comport info to server ---------------
+    if (WP.ComPortPresent != null) {
             WP.deviceMap.forEach(function(item) {
                 WP.SocketSent('comadd', {
                     hid: item.toUpperCase(),
@@ -97,7 +97,7 @@ WP.socket.on('connect', async function(){
                     sel: WP.ComPortPresent,
                     dl: CONFIG.datalen, 
                     p: CONFIG.parity.toLowerCase(),
-                    http: CONFIG.IF_port,
+                    http: CONFIG.DEVICE_PORT,
                     id: CONFIG.DEVICE_ID
                 });
             });
@@ -112,7 +112,7 @@ WP.socket.on('connect', async function(){
                 id: CONFIG.DEVICE_ID
             });
 
-        } else {
+    } else {
             await WP.SerialPort.list().then(
                 ports => ports.forEach(async function(port) {
                     console.log(port.comName + ' (' + port.manufacturer, ':pid=', port.productId, 'vid=', port.vendorId + ')');
@@ -122,15 +122,14 @@ WP.socket.on('connect', async function(){
                         sel: WP.ComPortPresent,
                         dl: CONFIG.datalen,
                         p: CONFIG.parity.toLowerCase(),
-                        http: CONFIG.IF_port,
+                        http: CONFIG.DEVICE_PORT,
                         id: CONFIG.DEVICE_ID
                     });
                 }),
             );
-        }
-        //--- Send to IS server ----------------------------
-        // WP.SocketSent('IFweb_start', {id: CONFIG.DEVICE_ID });
     }
+    //--- Send to IS server ----------------------------
+    // WP.SocketSent('IFweb_start', {id: CONFIG.DEVICE_ID });
     
 });
 
@@ -170,8 +169,13 @@ WP.socket.on('WRT', function(data){
       // WP.SocketSent('ACK',msg);
 });
 WP.socket.on('RCVSTATE', function(data){
-  console.log('rcv state: '+ data.msg);
-  WP.RcvState = data.msg;
+    //   console.log('rcv state: '+ data.msg);
+    // if(WP.RcvState != WP.STATE_DOWNLOADFONT){
+    //     if(data.msg ==  WP.STATE_DOWNLOADFONT){
+    //         console.log("Start Downloading !!!")
+    //     }
+    // }
+    WP.RcvState = data.msg;
 });
 
      

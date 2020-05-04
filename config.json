@@ -1,14 +1,12 @@
 {
-    "username": "hant",
-    "password": "hant8425",
+    "username": "test1@winpos.com.tw",
+    "password": "86657955",
+    "DEVICE_ID": "WD5000-0001",
+    "SERVER_URL": "localhost",
+    "UI_PORT": 8081,
+    "DEVICE_PORT":8082,
     "comport": "COM5",
     "baudrate": 115200,
     "datalen": 8,
-    "parity": "none",
-    "Browser_port": 8081,
-    "IF_port":8082,
-    "browser": "ENABLE",
-    "DOWNLOAD_FONT": "DISABLE",
-    "SERVER_URL": "localhost",
-    "DEVICE_ID": "WD5000-0001"
+    "parity": "none"
 }

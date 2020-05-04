@@ -99,7 +99,8 @@ module.exports = {
                 //-----------------------------------------------
                 // we can output the command buffer to the customer for development purpose
                 //-----------------------------------------------
-                if( process.env.ENGINEERING_MOD == "ON"){
+                // if( process.env.ENGINEERING_MOD == "ON"){
+                if(WP.RcvState != WP.STATE_DOWNLOADFONT){
                     // console.log(Buffer.from(buf).toString('hex'));
                     //---- or use the follow formate to conver to Hex string -----
                     // console.log(buf.toString('ascii',0,buf.length));
@@ -165,7 +166,7 @@ function parser_datain() {
         } else if (rcv_buf[0] == 78 && rcv_buf[1] == 71) { //'NG'
             FONT_update_process = false;
             msg = 'Download Fail !!!'
-            WP.SocketSent('done',{p1:msg, id:CONFIG.DEVICE_ID} );
+            WP.SocketSent('done',{cmd:msg, id:CONFIG.DEVICE_ID} );
             console.log("download Fail");
         }
     } else if (rcv_buf[rcvcnt] == 0) {
@@ -173,27 +174,27 @@ function parser_datain() {
             case WP.STATE_GETBAUDRATE:
                 msg = Buffer.from(rcv_buf);
                 WP.ShowMsg(msg.toString());
-                WP.SocketSent('done', {p1:msg.toString(), id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_BAUD',msg:msg.toString(), id:CONFIG.DEVICE_ID});
                 break;
             case WP.STATE_GETCMDTYPE:
                 msg = Buffer.from(rcv_buf);
                 //ShowMsg(msg.toString());
-                WP.SocketSent('done', {p1:msg.toString(), id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_CMDTYPE',msg:msg.toString(), id:CONFIG.DEVICE_ID});
                 break;
             case WP.STATE_GETCHARSET:
                 msg = Buffer.from(rcv_buf);
                 //ShowMsg(msg.toString());
-                WP.SocketSent('done', {p1:msg.toString(), id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_CHARSET',msg:msg.toString(), id:CONFIG.DEVICE_ID});
                 break;
             case WP.STATE_GETCODEPAGE:
                 msg = Buffer.from(rcv_buf);
                 //ShowMsg(msg.toString());
-                WP.SocketSent('done', {p1:msg.toString(), id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_CODEPAGE',msg:msg.toString(), id:CONFIG.DEVICE_ID});
                 break;
             case WP.STATE_GETFIRMWARE:
                 msg = Buffer.from(rcv_buf);
                 //ShowMsg(msg.toString());
-                WP.SocketSent('done', {p1:msg.toString(), id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_FWVERSION',msg:msg.toString(), id:CONFIG.DEVICE_ID});
                 break;
             case WP.STATE_READ_BOOT:
                 start = rcv_buf.indexOf(0x1f);
@@ -201,7 +202,7 @@ function parser_datain() {
                 result = Buffer.from(rcv_buf.slice(start + 1, end));
                 msg = result.toString('ascii', 0, result.length);
                 //ShowMsg(msg);
-                WP.SocketSent('done', {p1:'Boot Version : ' + msg, id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_BOOT',msg:msg, id:CONFIG.DEVICE_ID});
                 WP.resMsg = msg;
                 break;
             case WP.STATE_READ_FW:
@@ -210,7 +211,7 @@ function parser_datain() {
                 result = Buffer.from(rcv_buf.slice(start + 1, end));
                 msg = result.toString('ascii', 0, result.length);
                 //ShowMsg(msg);
-                WP.SocketSent('done', {p1:'FW Version : ' + msg, id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RD_FW',msg:msg, id:CONFIG.DEVICE_ID});
                 WP.resMsg = msg;
                 break;
             case WP.STATE_READ_MANUFACTURE:
@@ -219,8 +220,7 @@ function parser_datain() {
                 result = Buffer.from(rcv_buf.slice(start + 1, end));
                 msg = result.toString('ascii', 0, result.length);
                 //ShowMsg(msg);
-                WP.SocketSent('done', {p1:'Manufacture : ' + msg,id:CONFIG.DEVICE_ID});
-                WP.SocketSent('rcvmf', {p1:msg,id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RDMF',msg:msg,id:CONFIG.DEVICE_ID});
                 WP.resMsg = msg;
                 break;
             case WP.STATE_READ_MODELNAME:
@@ -229,8 +229,7 @@ function parser_datain() {
                 result = Buffer.from(rcv_buf.slice(start + 1, end));
                 msg = result.toString('ascii', 0, result.length);
                 //ShowMsg(msg);
-                WP.SocketSent('done', {p1:'ModelName : ' + msg,id:CONFIG.DEVICE_ID});
-                WP.SocketSent('rcvpname', {p1:msg,id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RDPNAME',msg:msg,id:CONFIG.DEVICE_ID});
                 WP.resMsg = msg;
                 break;
             case WP.STATE_READ_SERIAL:
@@ -239,8 +238,7 @@ function parser_datain() {
                 result = Buffer.from(rcv_buf.slice(start + 1, end));
                 msg = result.toString('ascii', 0, result.length);
                 //ShowMsg(msg);
-                WP.SocketSent('done', {p1:'Read Serial Number : ' + msg, id:CONFIG.DEVICE_ID});
-                WP.SocketSent('rcvserial', {p1:msg,id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RDSERIAL',msg:msg, id:CONFIG.DEVICE_ID});
                 WP.resMsg = msg;
                 break;
             case WP.STATE_READ_FONTCODE:
@@ -250,8 +248,7 @@ function parser_datain() {
                 WP.Font_code = result.toString('ascii', 0, result.length);
                 msg = WP.Font_code;
                 //ShowMsg(msg);
-                WP.SocketSent('done', {p1:'Font Code : ' + msg, id:CONFIG.DEVICE_ID});
-                // WP.SocketSent('rcvserial', {p1:msg,id:CONFIG.DEVICE_ID});
+                WP.SocketSent('datain', {cmd:'RDFONTCODE',msg:msg, id:CONFIG.DEVICE_ID});
                 WP.resMsg = msg;
                 break;
             default:

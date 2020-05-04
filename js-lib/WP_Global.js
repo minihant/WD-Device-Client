@@ -29,8 +29,8 @@ exports.resMsg = '';
 exports.Device_Port = null;
 exports.SerialPort = require('serialport');
 exports.scanalarm = null;
-exports.BROWSER_URL = 'http://'+ this.CONFIG.SERVER_URL +':' + this.CONFIG.Browser_port;
-exports.IF_URL = 'http://'+ this.CONFIG.SERVER_URL +':' + this.CONFIG.IF_port;
+exports.BROWSER_URL = 'http://'+ this.CONFIG.SERVER_URL +':' + this.CONFIG.UI_PORT;
+exports.IF_URL = 'http://'+ this.CONFIG.SERVER_URL +':' + this.CONFIG.DEVICE_PORT;
 exports.socket = require('socket.io-client')(this.IF_URL);
 exports.USB_CDC= require('./Usb_CDC.js');
 exports._delay = function (ms) {
@@ -83,6 +83,9 @@ exports.SocketSent= function(cmd,msg){
 }
 exports.getSocketID = function(){
     return this.socket.id;
+}
+exports.getAppVersion= function(){
+    return process.env.APP_VERSION;
 }
 exports.WriteStream= function(arr){
     const USB_CDC= require('./Usb_CDC.js');
